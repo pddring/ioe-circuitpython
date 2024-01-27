@@ -1,6 +1,8 @@
 import time
-
-from smbus2 import SMBus, i2c_msg
+from circuitpython_adapter import not_SMBus as SMBus
+import digitalio
+#i2c_bus = SMBus(1)
+#from smbus2 import SMBus, i2c_msg
 
 from . import ioe_regs, sioe_regs
 
@@ -167,12 +169,13 @@ class _IO:
         interrupt_pin=None,
         interrupt_pull_up=False,
         gpio=None,
-        smbus_id=1,
         skip_chip_id_check=False,
-        perform_reset=False
+        perform_reset=False,
+        SDA=None,
+        SCL=None
     ):
         self._i2c_addr = i2c_addr
-        self._i2c_dev = SMBus(smbus_id)
+        self._i2c_dev = SMBus(SDA=SDA, SCL=SCL)
         self._debug = False
         self._vref = 3.3
         self._adc_enabled = False
@@ -193,8 +196,11 @@ class _IO:
             self.reset()
 
         # Set up the interrupt pin on the Pi, and enable the chip's output
+        #TODO: don't think interrupts are supported on CircuitPython
         if self._interrupt_pin is not None:
-            if self._gpio is None:
+            self.i2c_int_pin = digitalio.DigitalInOut(self._interrupt_pin)
+            self.i2c_int_pin.direction = digitalio.Direction.INPUT
+            """if self._gpio is None:
                 import RPi.GPIO as GPIO
                 self._gpio = GPIO
             self._gpio.setwarnings(False)
@@ -203,52 +209,35 @@ class _IO:
                 self._gpio.setup(self._interrupt_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             else:
                 self._gpio.setup(self._interrupt_pin, GPIO.IN, pull_up_down=GPIO.PUD_OFF)
+            """
             self.enable_interrupt_out()
 
     def i2c_read8(self, reg):
-        """Read a single (8bit) register from the device."""
-        msg_w = i2c_msg.write(self._i2c_addr, [reg])
-        msg_r = i2c_msg.read(self._i2c_addr, 1)
-        self._i2c_dev.i2c_rdwr(msg_w, msg_r)
-
-        return list(msg_r)[0]
-
-    def i2c_read12(self, reg_l, reg_h):
-        """Read two (4+8bit) registers from the device, as a single read if they are consecutive."""
-        if reg_h == reg_l + 1:
-            msg_w = i2c_msg.write(self._i2c_addr, [reg_l])
-            msg_r = i2c_msg.read(self._i2c_addr, 2)
-            self._i2c_dev.i2c_rdwr(msg_w, msg_r)
-            return list(msg_r)[0] | (list(msg_r)[1] << 4)
-        else:
-            return (self.i2c_read8(reg_h) << 4) | self.i2c_read8(reg_l)
+        data = self._i2c_dev.read_byte_data(self._i2c_addr, reg)
+        return data
 
     def i2c_read16(self, reg_l, reg_h):
+        
         """Read two (8+8bit) registers from the device, as a single read if they are consecutive."""
         if reg_h == reg_l + 1:
-            msg_w = i2c_msg.write(self._i2c_addr, [reg_l])
-            msg_r = i2c_msg.read(self._i2c_addr, 2)
-            self._i2c_dev.i2c_rdwr(msg_w, msg_r)
-            return list(msg_r)[0] | (list(msg_r)[1] << 8)
+            data = self._i2c_dev.readfrom_mem(self._i2c_addr, reg_l, 2)
+            return data[0] | (data[1] << 8)
         else:
-            return self.i2c_read8(reg_l) | (self.i2c_read8(reg_h) << 8)
+            return self._i2c_dev.read_byte_data(self._i2c_addr, reg_l) | (self.read_byte_data(self._i2c_addr, reg_h) << 8)
 
     def i2c_write8(self, reg, value):
         """Write a single (8bit) register to the device."""
-        msg_w = i2c_msg.write(self._i2c_addr, [reg, value])
-        self._i2c_dev.i2c_rdwr(msg_w)
+        self._i2c_dev.write_byte_data(self._i2c_addr, reg, value)
 
     def i2c_write16(self, reg_l, reg_h, value):
         """Write two (8+8bit) registers to the device, as a single write if they are consecutive."""
         val_l = value & 0xff
         val_h = (value >> 8) & 0xff
         if reg_h == reg_l + 1:
-            msg_w = i2c_msg.write(self._i2c_addr, [reg_l, val_l, val_h])
-            self._i2c_dev.i2c_rdwr(msg_w)
+            self._i2c_dev.write_i2c_block_data(self._i2c_addr, reg_l, [val_l, val_h])
         else:
-            msg_wl = i2c_msg.write(self._i2c_addr, [reg_l, val_l])
-            msg_wh = i2c_msg.write(self._i2c_addr, [reg_h, val_h])
-            self._i2c_dev.i2c_rdwr(msg_wl, msg_wh)
+            self._i2c_dev.write_byte_data(self._i2c_addr, reg_l, val_l)
+            self._i2c_dev.write_byte_data(self._i2c_addr, reg_h, val_h)
 
     def get_pin(self, pin):
         """Get a pin definition from its index."""
@@ -382,7 +371,7 @@ class _IO:
     def get_interrupt(self):
         """Get the IOE interrupt state."""
         if self._interrupt_pin is not None:
-            return self._gpio.input(self._interrupt_pin) == 0
+            return self.i2c_int_pin.value == 0
         else:
             return self.get_bit(self.REG_INT, self.BIT_INT_TRIGD)
 
@@ -797,7 +786,8 @@ class IOE(_IO, ioe_regs.REGS):
         interrupt_pin=None,
         interrupt_pull_up=False,
         gpio=None,
-        smbus_id=1,
+        SDA=None,
+        SCL=None,
         skip_chip_id_check=False,
         perform_reset=False
     ):
@@ -844,8 +834,8 @@ class IOE(_IO, ioe_regs.REGS):
 
         if i2c_addr is None:
             i2c_addr = self.I2C_ADDR
-
-        _IO.__init__(self, i2c_addr, interrupt_timeout, interrupt_pin, interrupt_pull_up, gpio, smbus_id, skip_chip_id_check, perform_reset)
+        
+        _IO.__init__(self, i2c_addr, interrupt_timeout, interrupt_pin, interrupt_pull_up, gpio, skip_chip_id_check, perform_reset,SCL=SCL, SDA=SDA)
 
     def read_rotary_encoder(self, channel):
         """Read the step count from a rotary encoder."""
@@ -1005,12 +995,8 @@ class SuperIOE(_IO, sioe_regs.REGS):
         """Read two (8bit) register from the device, as a single read if they are consecutive."""
         if count <= 0:
             raise ValueError("Count must be greater than zero!")
-
-        msg_w = i2c_msg.write(self._i2c_addr, [reg_base])
-        msg_r = i2c_msg.read(self._i2c_addr, count)
-        self._i2c_dev.i2c_rdwr(msg_w, msg_r)
-        return list(msg_r)
-
+        return self._i2c_dev.readfrom_mem(self._i2c_addr, count)
+        
     def read_rotary_encoder(self, channel):
         """Read the step count from a rotary encoder."""
         if channel < 1 or channel > 4:
