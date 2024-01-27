@@ -216,6 +216,16 @@ class _IO:
         data = self._i2c_dev.read_byte_data(self._i2c_addr, reg)
         return data
 
+    def i2c_read12(self, reg_l, reg_h):
+        
+        """Read two (4+8bit) registers from the device, as a single read if they are consecutive."""
+        if reg_h == reg_l + 1:
+            data = self._i2c_dev.readfrom_mem(self._i2c_addr, reg_l, 2)
+            return data[0] | ((data[1] & 0x0F) << 8)
+        else:
+            return self._i2c_dev.read_byte_data(self._i2c_addr, reg_l) | ((self.read_byte_data(self._i2c_addr, reg_h) & 0x0F) << 8)
+
+
     def i2c_read16(self, reg_l, reg_h):
         
         """Read two (8+8bit) registers from the device, as a single read if they are consecutive."""

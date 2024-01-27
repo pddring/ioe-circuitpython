@@ -5,7 +5,7 @@ Source: https://github.com/pimoroni/ioe-python
 
 IO Expander Breakout uses a Nuvoton MS51 microcontroller and I2C to give you 14 additional input/output pins to connect things up to. Eight of the pins are hooked up to an Analog to Digital Converter and six of the pins can be used as (up to 16-bit) PWM outputs.
 
-This library is also used to power our other Nuvoton-based boards and breakouts!
+This library is also used to power Pimoroni's other Nuvoton-based boards and breakouts!
 
 ## Where to buy
 

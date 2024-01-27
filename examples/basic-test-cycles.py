@@ -1,10 +1,10 @@
 import time
-
+import board
 import ioexpander as io
 
 
 def test_cycles():
-    ioe = io.IOE()
+    ioe = io.IOE(i2c_addr=0x0F, SDA=board.GP20, SCL=board.GP21)
 
     # ioe.set_mode(1, io.PWM)
     # ioe.set_mode(9, io.OUT)

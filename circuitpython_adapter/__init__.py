@@ -3,9 +3,9 @@ class not_SMBus:
 
     :param *args: Unused, only exists to prevent errors when used as a drop in for SMBus
 
-    :param ~microcontroller.pin SCL: The pin the i2c SCL line is connected to. If not defined, defaults to board.SCL
+    :param ~microcontroller.pin SCL: The pin the i2c SCL line is connected to. If not defined, defaults to board.GP21
 
-    :param ~microcontroller.pin SDA: The pin the i2c SDA line is connected to. If not defined, defaults to board.SDA
+    :param ~microcontroller.pin SDA: The pin the i2c SDA line is connected to. If not defined, defaults to board.GP20
 
     :param I2C: An I2C instance. If not defined, defaults to creating a new I2C instance
     """
@@ -15,10 +15,10 @@ class not_SMBus:
 
         if I2C is None:
             if SCL is None:
-                SCL = board.SCL
+                SCL = board.GP21
             
             if SDA is None:
-                SDA = board.SDA
+                SDA = board.GP20
             
             self.i2c = busio.I2C(SCL, SDA)
         else:

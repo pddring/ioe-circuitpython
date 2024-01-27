@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import time
+import time, board
 
 import ioexpander as io
 
@@ -15,7 +15,7 @@ Press Ctrl+C to exit.
 
 """)
 
-ioe = io.IOE(i2c_addr=0x18)
+ioe = io.IOE(i2c_addr=0x0F, SDA=board.GP20, SCL=board.GP21)
 
 ioe.set_adc_vref(3.3)  # Input voltage of IO Expander, this is 3.3 on Breakout Garden
 ioe.set_mode(12, io.ADC)

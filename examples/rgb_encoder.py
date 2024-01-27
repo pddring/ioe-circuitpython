@@ -1,20 +1,11 @@
 import colorsys
 import time
 import board
+import random
 
 import ioexpander as io
 
-print("""rotary.py
-
-Change the I2C_ADDR to:
- - 0x0F to use with the Rotary Encoder breakout.
- - 0x18 to use with IO Expander.
-
-Press Ctrl+C to exit.
-
-""")
-
-I2C_ADDR = 0x0F  # 0x18 for IO Expander, 0x0F for the encoder breakout
+I2C_ADDR = 0x0F  
 
 PIN_RED = 1
 PIN_GREEN = 7
@@ -24,10 +15,10 @@ POT_ENC_A = 12
 POT_ENC_B = 3
 POT_ENC_C = 11
 
-BRIGHTNESS = 0.5                # Effectively the maximum fraction of the period that the LED will be on
+BRIGHTNESS = 1.0                # Effectively the maximum fraction of the period that the LED will be on
 PERIOD = int(255 / BRIGHTNESS)  # Add a period large enough to get 0-255 steps at the desired brightness
 
-ioe = io.IOE(i2c_addr=I2C_ADDR, interrupt_pin=board.GP22)
+ioe = io.IOE(i2c_addr=I2C_ADDR, interrupt_pin=board.GP22, SDA=board.GP20, SCL=board.GP21)
 
 # Swap the interrupt pin for the Rotary Encoder breakout
 if I2C_ADDR == 0x0F:
@@ -46,18 +37,17 @@ print("Running LED with {} brightness steps.".format(int(PERIOD * BRIGHTNESS)))
 
 count = 0
 r, g, b, = 0, 0, 0
-
 while True:
     if ioe.get_interrupt():
         count = ioe.read_rotary_encoder(1)
         ioe.clear_interrupt()
 
-    h = (count % 360) / 360.0
-    r, g, b = [int(c * PERIOD * BRIGHTNESS / 256) for c in colorsys.hsv_to_rgb(h, 1.0, 1.0)]
     ioe.output(PIN_RED, r)
     ioe.output(PIN_GREEN, g)
     ioe.output(PIN_BLUE, b)
+    
+    r, g, b = colorsys.hsv_to_rgb((count % 255)/ 255, 1, 1)
 
-    print(count, h, r, g, b)
+    print(count, r, g, b)
 
-    time.sleep(1.0 / 30)
+    time.sleep(0.1)
