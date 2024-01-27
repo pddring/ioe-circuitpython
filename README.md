@@ -1,11 +1,13 @@
 # IO Expander
 
-This is a port of pimoroni's io expander python library, adapted to be suitable for a raspberry pi pico running CircuitPython 8
+This is a port of Pimoroni's io expander python library, adapted to be suitable for a raspberry pi pico running CircuitPython 8
 Source: https://github.com/pimoroni/ioe-python
 
 IO Expander Breakout uses a Nuvoton MS51 microcontroller and I2C to give you 14 additional input/output pins to connect things up to. Eight of the pins are hooked up to an Analog to Digital Converter and six of the pins can be used as (up to 16-bit) PWM outputs.
 
-This library is also used to power Pimoroni's other Nuvoton-based boards and breakouts!
+This library is also used to power Pimoroni's other Nuvoton-based boards and breakouts.
+
+It's only been tested with a RGB Encoder Breakout (see below) with a Raspberry Pi Pico on a Pico Explorer board so may need some adapting for other breakouts
 
 ## Where to buy
 
