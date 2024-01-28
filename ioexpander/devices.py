@@ -73,7 +73,7 @@ class RGBLED:
         :param v: Value (0 to 1.0)
 
         """
-        r, g, b = [int(c * self.period * self.brightness) for c in colorsys.hsv_to_rgb(h, s, v)]
+        r, g, b = [int(c * self.period * self.brightness/255) for c in colorsys.hsv_to_rgb(h, s, v)]
         self.ioe.output(self.pin_r, r)
         self.ioe.output(self.pin_g, g)
         self.ioe.output(self.pin_b, b)

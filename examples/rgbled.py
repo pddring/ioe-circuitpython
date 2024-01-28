@@ -21,9 +21,12 @@ LED_B = 2
 if __name__ == "__main__":
     rgbled = RGBLED(None, 0x0F, LED_R, LED_G, LED_B, brightness=0.5, invert=True)
 
-    while True:
+    """while True:
         h = time.time() % 256 / 256
         r, g, b = colorsys.hsv_to_rgb(h, 1.0, 1.0)
         print(h, r, g, b)
         rgbled.set_rgb(r, g, b)
         time.sleep(1.0 / 30)
+"""
+    rgbled.set_rgb(255,0,0)
+    print(dir(rgbled))

@@ -172,10 +172,14 @@ class _IO:
         skip_chip_id_check=False,
         perform_reset=False,
         SDA=None,
-        SCL=None
+        SCL=None,
+        I2C=None
     ):
         self._i2c_addr = i2c_addr
-        self._i2c_dev = SMBus(SDA=SDA, SCL=SCL)
+        if I2C==None:
+            self._i2c_dev = SMBus(SDA=SDA, SCL=SCL)
+        else:
+            self._i2c_dev = SMBus(I2C=I2C)
         self._debug = False
         self._vref = 3.3
         self._adc_enabled = False
@@ -798,6 +802,7 @@ class IOE(_IO, ioe_regs.REGS):
         gpio=None,
         SDA=None,
         SCL=None,
+        I2C=None,
         skip_chip_id_check=False,
         perform_reset=False
     ):
@@ -845,7 +850,7 @@ class IOE(_IO, ioe_regs.REGS):
         if i2c_addr is None:
             i2c_addr = self.I2C_ADDR
         
-        _IO.__init__(self, i2c_addr, interrupt_timeout, interrupt_pin, interrupt_pull_up, gpio, skip_chip_id_check, perform_reset,SCL=SCL, SDA=SDA)
+        _IO.__init__(self, i2c_addr, interrupt_timeout, interrupt_pin, interrupt_pull_up, gpio, skip_chip_id_check, perform_reset,SCL=SCL, SDA=SDA, I2C=I2C)
 
     def read_rotary_encoder(self, channel):
         """Read the step count from a rotary encoder."""
