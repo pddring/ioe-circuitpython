@@ -58,14 +58,14 @@ while True:
             rgb = [random.randint(0, 255) for c in range(3)]
             print("Turn the encoder to fade from black to R:{} G:{} B:{}".format(*rgb))
             encoder.set_rgb(0,0,0)
-            print("Twizzle the rotary encoder up to 10:")
+            print("Twizzle the rotary encoder up to 50:")
             count = 0
-            while count != 10:
+            while count < 50:
                 if ioe.get_interrupt():
                     count = abs(ioe.read_rotary_encoder(1))
                     ioe.clear_interrupt()
-                    print(count)
-                    faded_rgb = [int(c*count/10) for c in rgb]
+                    print("{:2}/50".format(count))
+                    faded_rgb = [int(c*count/50) for c in rgb]
                     encoder.set_rgb(*faded_rgb)
                 time.sleep(0.01)
             
@@ -79,12 +79,12 @@ while True:
             encoder.set_rgb(0,0,0)
             print("Twizzle the rotary encoder up to 64:")
             count = 0
-            while count != 64:
+            while count < 64:
                 if ioe.get_interrupt():
                     count = abs(ioe.read_rotary_encoder(1))
                     ioe.clear_interrupt()
                     hue = count / 64
-                    print("Encoder value: {}/64 Hue: {}/1.0".format(count, hue))
+                    print("Encoder value: {}/64 Hue: {:.2f}/1.0".format(count, hue))
                     
                     encoder.set_hue(hue, 1.0, 1.0)
                 time.sleep(0.01)
