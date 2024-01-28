@@ -41,5 +41,5 @@ To take IO Expander further, the full API is described in the [library reference
 
 It's possible to connect multiple devices to the same i2c bus as long as they have different addresses. 
 
-You can change the default i2c address by connecting just that one breakout and calling the `set_i2c_addr method`. 
+You can change the default i2c address by connecting just that one breakout and calling the `set_i2c_addr` method. 
 The [multiple_encoders](/examples/multiple_encoders.py) example allows you to change i2c addresses and experiment with multiple rgb rotary encoders
